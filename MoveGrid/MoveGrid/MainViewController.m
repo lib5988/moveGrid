@@ -24,7 +24,6 @@
 }
 
 @property(nonatomic, strong)NSMutableArray *gridListArray;
-//@property(nonatomic, strong)NSMutableArray *removeGridArray;
 @property(nonatomic, strong)NSMutableArray *showGridArray;
 @property(nonatomic, strong)UIImage *normalGridBg;
 @property(nonatomic, strong)UIImage *highlightedBg;
@@ -41,7 +40,6 @@
     if (self) {
         self.gridListArray = [[NSMutableArray alloc] initWithCapacity:12];
         self.showGridArray = [[NSMutableArray alloc] initWithCapacity:12];
-        //self.removeGridArray = [[NSMutableArray alloc] initWithCapacity:11];
         self.normalGridBg = [UIImage imageNamed:@"app_item_bg"];
         self.highlightedBg = [UIImage imageNamed:@"app_item_pressed_bg"];
         self.deleteIcon = [UIImage imageNamed:@"app_item_plus"];
@@ -53,7 +51,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = [UIColor orangeColor];
     self.navigationController.navigationBar.translucent = NO;
     
     //每个格子的宽度
@@ -130,29 +128,26 @@
 //格子的点击事件
 - (void)gridClick:(CustomGrid *)clickItem
 {
-    //判断是否点击的最后一个格子
-    if (clickItem.gridId != 00) {
-        //查看是否有选中的格子，并且比较点击的格子是否就是选中的格子
-        for (NSInteger i = 0; i < [_gridListArray count]; i++) {
-            CustomGrid *item = _gridListArray[i];
-            if (item.isChecked && clickItem.gridId != item.gridId) {
-                item.isChecked = NO;
-                item.isMove = NO;
-                isSelected = NO;
-                //隐藏删除图标
-                UIButton *removeBtn = (UIButton *)[self.gridListView viewWithTag:item.gridId];
-                removeBtn.hidden = YES;
-                [item setBackgroundImage:self.normalGridBg forState:UIControlStateNormal];
-            }
+    //查看是否有选中的格子，并且比较点击的格子是否就是选中的格子
+    for (NSInteger i = 0; i < [_gridListArray count]; i++) {
+        CustomGrid *item = _gridListArray[i];
+        if (item.isChecked && clickItem.gridId != item.gridId) {
+            item.isChecked = NO;
+            item.isMove = NO;
+            isSelected = NO;
+            //隐藏删除图标
+            UIButton *removeBtn = (UIButton *)[self.gridListView viewWithTag:item.gridId];
+            removeBtn.hidden = YES;
+            [item setBackgroundImage:self.normalGridBg forState:UIControlStateNormal];
+            break;
         }
-    }else{
-        switch (clickItem.gridId) {
-            case 00:
-                [self.navigationController pushViewController:[[MoreViewController alloc] init] animated:YES];
-                break;
-            default:
-                break;
-        }
+    }
+    switch (clickItem.gridId) {
+        case 00:
+            [self.navigationController pushViewController:[[MoreViewController alloc] init] animated:YES];
+            break;
+        default:
+            break;
     }
     NSLog(@"您点击的格子title：%d", clickItem.gridId);
 }
@@ -160,7 +155,7 @@
 //响应删除格子点击事件
 - (void)deleteGridClick:(UIButton *)deleteBtn
 {
-    NSLog(@"您删除的格子是：%d", deleteBtn.tag);
+    NSLog(@"您删除的格子Tag是：%d", deleteBtn.tag);
     for (NSInteger i = 0; i < _gridListArray.count; i++) {
         CustomGrid *removeGrid = _gridListArray[i];
         if (removeGrid.gridId == deleteBtn.tag) {
@@ -176,6 +171,9 @@
                 
             }
             [_gridListArray removeObjectAtIndex:removeGrid.gridIndex];
+            NSString *gridID = [NSString stringWithFormat:@"%d", removeGrid.gridId];
+            NSLog(@"您删除的格子gridID是：%@", gridID);
+            [_showGridArray removeObject:gridID];
         }
     }
     for (NSInteger i = 0; i < _gridListArray.count; i++) {
@@ -250,7 +248,10 @@
                 //移动到目标格子的索引下标
                 NSInteger toIndex = [self indexOfPoint:item.center withButton:item];
                 
-                if (toIndex < 0 || toIndex >= 11) {
+                NSInteger borderIndex = [_showGridArray indexOfObject:@"00"];
+                NSLog(@"borderIndex: %d", borderIndex);
+                
+                if (toIndex < 0 || toIndex >= borderIndex) {
                     contain = NO;
                 }else{
                     //获取移动到目标格子
@@ -274,6 +275,8 @@
                             preGrid.gridIndex = lastGridIndex;
                             lastGridIndex--;
                         }
+                        //排列格子顺序和更新格子坐标信息
+                        [self sortGridList];
                         
                     }else if((fromIndex - toIndex) < 0){
                         //从前往后拖动格子
@@ -288,6 +291,8 @@
                             //实时更新格子的索引下标
                             nextGrid.gridIndex = i;
                         }
+                        //排列格子顺序和更新格子坐标信息
+                        [self sortGridList];
                     }
                 }
             }
@@ -318,27 +323,33 @@
                     }
                 }];
                 
-                //重新排列数组中存放的格子顺序
-                [_gridListArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-                    CustomGrid *tempGrid1 = (CustomGrid *)obj1;
-                    CustomGrid *tempGrid2 = (CustomGrid *)obj2;
-                    return tempGrid1.gridIndex > tempGrid2.gridIndex;
-                }];
-                
-                //更新所有格子的中心点坐标信息
-                for (NSInteger i = 0; i < _gridListArray.count; i++) {
-                    CustomGrid *gridItem = _gridListArray[i];
-                    gridItem.gridCenterPoint = gridItem.center;
-                    
-                    //for test print
-                    NSLog(@"移动后所有格子的位置信息{gridIndex: %d, gridCenterPoint: %@, gridID: %d}",
-                          gridItem.gridIndex, NSStringFromCGPoint(gridItem.gridCenterPoint), gridItem.gridId);
-                }
+                //排列格子顺序和更新格子坐标信息
+                [self sortGridList];
             }
             //
             break;
         default:
             break;
+    }
+}
+
+- (void)sortGridList
+{
+    //重新排列数组中存放的格子顺序
+    [_gridListArray sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        CustomGrid *tempGrid1 = (CustomGrid *)obj1;
+        CustomGrid *tempGrid2 = (CustomGrid *)obj2;
+        return tempGrid1.gridIndex > tempGrid2.gridIndex;
+    }];
+    
+    //更新所有格子的中心点坐标信息
+    for (NSInteger i = 0; i < _gridListArray.count; i++) {
+        CustomGrid *gridItem = _gridListArray[i];
+        gridItem.gridCenterPoint = gridItem.center;
+        
+        //for test print
+        //NSLog(@"移动后所有格子的位置信息{gridIndex: %d, gridCenterPoint: %@, gridID: %d}",
+              //gridItem.gridIndex, NSStringFromCGPoint(gridItem.gridCenterPoint), gridItem.gridId);
     }
 }
 
