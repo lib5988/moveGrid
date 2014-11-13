@@ -139,7 +139,7 @@
             UIButton *removeBtn = (UIButton *)[self.gridListView viewWithTag:item.gridId];
             removeBtn.hidden = YES;
             [item setBackgroundImage:self.normalGridBg forState:UIControlStateNormal];
-            break;
+            break;  
         }
     }
     switch (clickItem.gridId) {
