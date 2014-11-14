@@ -94,7 +94,20 @@
 //响应格子的点击事件
 - (void)gridItemDidClicked:(CustomGrid *)clickItem
 {
-    
+    for (NSInteger index = 0; index < self.gridItemArray.count; index++)
+    {
+        CustomGrid *gridItem = self.gridItemArray[index];
+        if (gridItem.isChecked && gridItem.gridId != clickItem.gridId)
+        {
+            //隐藏删图标
+            UIButton *deleteButton = (UIButton *)[self.showMoreGridView viewWithTag:gridItem.gridId];
+            deleteButton.hidden = YES;
+            
+            [gridItem setIsChecked: NO];
+            [gridItem setBackgroundImage:normalImage forState:UIControlStateNormal];
+            isSelected = NO;
+        }
+    }
 }
 
 //响应格子删除事件
@@ -140,7 +153,8 @@
     }
     
     //for test print out
-    for (NSInteger i = 0; i < _gridItemArray.count; i++) {
+    for (NSInteger i = 0; i < _gridItemArray.count; i++)
+    {
         CustomGrid *gridItem = _gridItemArray[i];
         gridItem.gridCenterPoint = gridItem.center;
         NSLog(@"所有格子的位置信息{gridIndex: %d, gridCenterPoint: %@, gridID: %d}",
@@ -202,11 +216,12 @@
 {
     NSLog(@"click button index: %d", buttonIndex);
     if (buttonIndex == 0) {
-        for (NSInteger index = 0; index < self.gridItemArray.count; index++) {
+        for (NSInteger index = 0; index < self.gridItemArray.count; index++)
+        {
             CustomGrid *gridItem = self.gridItemArray[index];
-            if (gridItem.isChecked) {
-                
-                //隐藏删除图标
+            if (gridItem.isChecked)
+            {
+                //隐藏删图标
                 UIButton *deleteButton = (UIButton *)[self.showMoreGridView viewWithTag:gridItem.gridId];
                 deleteButton.hidden = YES;
                 

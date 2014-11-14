@@ -71,6 +71,7 @@
     NSLog(@"=====================: %d", self.addGridArray.count);
     [self.gridListView removeFromSuperview];
     [self.gridListArray removeAllObjects];
+    isSelected = NO;
     
     //
     if (self.addGridArray.count > 0) {
@@ -96,10 +97,6 @@
     
     [self.view addSubview:_gridListView];
     
-    UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(oneTouches:)];
-    //[gesture setNumberOfTouchesRequired:1];
-    [_gridListView addGestureRecognizer:gesture];
-    
     for (NSInteger index = 0; index < [_showGridArray count]; index++)
     {
         NSString *gridTitle = _showGridArray[index];
@@ -122,11 +119,6 @@
         NSLog(@"所有格子的位置信息{gridIndex: %d, gridCenterPoint: %@, gridID: %d}",
               gridItem.gridIndex, NSStringFromCGPoint(gridItem.gridCenterPoint), gridItem.gridId);
     }
-}
-
-- (void)oneTouches:(UILongPressGestureRecognizer *)gesture
-{
-    NSLog(@"oneTouches: %d", gesture.numberOfTouchesRequired);
 }
 
 #pragma mark CustomGrid Delegate
@@ -211,9 +203,10 @@
         grid.transform = CGAffineTransformMakeScale(1.2, 1.2);
     }
     
-    NSLog(@"没有一个格子选中............");
     //没有一个格子选中的时候
     if (!isSelected) {
+        
+        NSLog(@"没有一个格子选中............");
         grid.isChecked = YES;
         grid.isMove = YES;
         isSelected = YES;
