@@ -7,7 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
-
+@class MainViewController;
 @interface MoreViewController : UIViewController
+
+//显示格子的GridId
+@property(nonatomic, strong)NSMutableArray *showMoreGridIdArray;
+//当前首页显示格子的数量
+@property(nonatomic, assign)NSInteger currentGridCount;
 
 @end

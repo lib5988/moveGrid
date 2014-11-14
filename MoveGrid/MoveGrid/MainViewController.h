@@ -7,7 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CustomGrid.h"
 
-@interface MainViewController : UIViewController
+@interface MainViewController : UIViewController<CustomGridDelegate>
+
+@property(nonatomic, strong)NSMutableArray *addGridArray;
 
 @end
